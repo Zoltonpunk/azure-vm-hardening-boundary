@@ -1,0 +1,42 @@
+name: Build and Test Hardened Azure Image
+
+on:
+  push:
+    paths:
+      - 'packer/**'
+      - 'boundary/**'
+      - 'netfilter/**'
+      - '.github/workflows/ci.yml'
+  pull_request:
+
+jobs:
+  build-packer-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Packer
+        uses: hashicorp/setup-packer@v2
+      - name: Build Azure Image
+        run: |
+          cd packer
+          packer init .
+          packer validate .
+          packer build -var-file=variables.auto.pkrvars.hcl .
+      - name: Run OpenSCAP Hardening
+        run: |
+          cd packer
+          bash hardening.sh
+
+  boundary-setup-test:
+    needs: build-packer-image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint Boundary Config
+        run: |
+          cd boundary
+          # Add a linter or validation script for boundary.hcl here
+      - name: Test Apache Reverse Proxy Script
+        run: |
+          cd boundary
+          # Add a test script for the Apache reverse proxy here
