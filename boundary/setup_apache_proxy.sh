@@ -1,22 +1,26 @@
 #!/usr/bin/env bash
-# Install and configure Apache as a restrictive API reverse proxy
+# Install and configure Apache as a restrictive API reverse proxy with TLS
 
-set -e
+set -euo pipefail
 
+LOG="/var/log/setup_apache_proxy.log"
+exec > >(tee -a "$LOG") 2>&1
+
+echo "[INFO] Installing Apache and OpenSSL..."
 apt-get update
 apt-get install -y apache2 openssl
 
-# Generate a self-signed TLS cert
+echo "[INFO] Generating self-signed TLS certificate..."
 mkdir -p /etc/apache2/ssl
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
     -keyout /etc/apache2/ssl/apache.key \
     -out /etc/apache2/ssl/apache.crt \
     -subj "/CN=localhost"
 
-# Enable Apache modules
+echo "[INFO] Enabling Apache modules (ssl, proxy, proxy_http, headers)..."
 a2enmod ssl proxy proxy_http headers
 
-# Configure virtual host for reverse proxy (restrictive)
+echo "[INFO] Configuring Apache virtual host for reverse proxy..."
 cat > /etc/apache2/sites-available/reverse-proxy.conf <<EOF
 <VirtualHost *:443>
     ServerName localhost
@@ -29,16 +33,18 @@ cat > /etc/apache2/sites-available/reverse-proxy.conf <<EOF
     ProxyPassReverse /api http://localhost:9200/api
 
     <Proxy *>
-        Order deny,allow
-        Deny from all
-        Allow from 127.0.0.1
+        Require ip 127.0.0.1
     </Proxy>
+
     RequestHeader set X-Forwarded-Proto "https"
 </VirtualHost>
 EOF
 
+echo "[INFO] Enabling reverse proxy site and disabling default site..."
 a2ensite reverse-proxy
 a2dissite 000-default
+
+echo "[INFO] Reloading Apache to apply changes..."
 systemctl reload apache2
 
-echo "Apache reverse proxy set up and secured."
+echo "[INFO] Apache reverse proxy setup and secured successfully."
