@@ -1,31 +1,40 @@
-{
-  "variables": {
-    "azure_subscription_id": "",
-    "azure_client_id": "",
-    "azure_client_secret": "",
-    "azure_tenant_id": ""
-  },
-  "builders": [
-    {
-      "type": "azure-arm",
-      "subscription_id": "{{user `azure_subscription_id`}}",
-      "client_id": "{{user `azure_client_id`}}",
-      "client_secret": "{{user `azure_client_secret`}}",
-      "tenant_id": "{{user `azure_tenant_id`}}",
-      "managed_image_resource_group_name": "myResourceGroup",
-      "managed_image_name": "hardened-ubuntu2204",
-      "os_type": "Linux",
-      "image_publisher": "Canonical",
-      "image_offer": "0001-com-ubuntu-server-jammy",
-      "image_sku": "22_04-lts-gen2",
-      "location": "East US",
-      "vm_size": "Standard_DS1_v2"
+packer {
+  required_plugins {
+    azure = {
+      source  = "github.com/hashicorp/azure"
+      version = ">= 1.0.0"
     }
-  ],
-  "provisioners": [
-    {
-      "type": "shell",
-      "script": "setup.sh"
-    }
-  ]
+  }
+}
+
+variable "azure_subscription_id" {}
+variable "azure_client_id" {}
+variable "azure_client_secret" {}
+variable "azure_tenant_id" {}
+variable "resource_group" { default = "myResourceGroup" }
+variable "image_name"     { default = "hardened-ubuntu2204" }
+variable "location"       { default = "East US" }
+variable "vm_size"        { default = "Standard_DS1_v2" }
+
+source "azure-arm" "ubuntu2204" {
+  subscription_id                = var.azure_subscription_id
+  client_id                      = var.azure_client_id
+  client_secret                  = var.azure_client_secret
+  tenant_id                      = var.azure_tenant_id
+  managed_image_resource_group_name = var.resource_group
+  managed_image_name             = var.image_name
+  os_type                        = "Linux"
+  image_publisher                = "Canonical"
+  image_offer                    = "0001-com-ubuntu-server-jammy"
+  image_sku                      = "22_04-lts-gen2"
+  location                       = var.location
+  vm_size                        = var.vm_size
+}
+
+build {
+  sources = ["source.azure-arm.ubuntu2204"]
+
+  provisioner "shell" {
+    script = "packer/setup.sh"
+  }
 }
