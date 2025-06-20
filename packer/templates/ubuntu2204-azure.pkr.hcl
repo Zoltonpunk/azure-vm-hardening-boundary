@@ -7,20 +7,20 @@ packer {
   }
 }
 
-variable "azure_subscription_id" {}
-variable "azure_client_id" {}
-variable "azure_client_secret" {}
-variable "azure_tenant_id" {}
+variable "arm_subscription_id" {}
+variable "arm_client_id" {}
+variable "arm_client_secret" {}
+variable "arm_tenant_id" {}
 variable "resource_group" { default = "myResourceGroup" }
 variable "image_name"     { default = "hardened-ubuntu2204" }
 variable "location"       { default = "East US" }
 variable "vm_size"        { default = "Standard_DS1_v2" }
 
 source "azure-arm" "ubuntu2204" {
-  subscription_id                = var.azure_subscription_id
-  client_id                      = var.azure_client_id
-  client_secret                  = var.azure_client_secret
-  tenant_id                      = var.azure_tenant_id
+  subscription_id                = var.arm_subscription_id
+  client_id                      = var.arm_client_id
+  client_secret                  = var.arm_client_secret
+  tenant_id                      = var.arm_tenant_id
   managed_image_resource_group_name = var.resource_group
   managed_image_name             = var.image_name
   os_type                        = "Linux"
