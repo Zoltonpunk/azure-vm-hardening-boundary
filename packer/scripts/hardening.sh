@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Enhanced CIS Level 1 hardening with OpenSCAP and basic custom hardening
+# Enhanced CIS Level 1 hardening with OpenSCAP, custom hardening, and file permission lockdown
 
 set -euo pipefail
 
@@ -14,6 +14,9 @@ apt-get install -y openscap-scanner scap-security-guide
 
 OSCAP_PROFILE="xccdf_org.ssgproject.content_profile_cis"
 OSCAP_CONTENT="/usr/share/xml/scap/ssg/content/ssg-ubuntu2204-ds.xml"
+REPORT_DIR="/var/log/hardening-reports"
+
+mkdir -p "$REPORT_DIR"
 
 # Check if the SCAP content file exists
 if [ ! -f "$OSCAP_CONTENT" ]; then
@@ -23,33 +26,72 @@ fi
 
 # Run pre-hardening OpenSCAP scan to assess current system state
 echo "[INFO] Running pre-hardening OpenSCAP scan..."
-oscap xccdf eval --profile "$OSCAP_PROFILE" --results pre_hardening_results.xml "$OSCAP_CONTENT"
+oscap xccdf eval \
+  --profile "$OSCAP_PROFILE" \
+  --results "$REPORT_DIR/pre_hardening_results.xml" \
+  "$OSCAP_CONTENT"
 
 # Run automatic remediation using OpenSCAP
 echo "[INFO] Running automatic remediation..."
-oscap xccdf eval --profile "$OSCAP_PROFILE" --remediate "$OSCAP_CONTENT"
+oscap xccdf eval \
+  --profile "$OSCAP_PROFILE" \
+  --remediate \
+  "$OSCAP_CONTENT"
 
-# Apply additional custom hardening steps not covered by OpenSCAP
+# -------------------------------
+# Custom Hardening
+# -------------------------------
 
 echo "[INFO] Applying additional custom hardening..."
 
-# Example: Disable root SSH login for better security
+# Disable root SSH login
 sed -i 's/^#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
 
-# Example: Strengthen sysctl parameters to protect against IP spoofing
+# Protect against IP spoofing
 cat >> /etc/sysctl.d/99-custom.conf << EOF
 net.ipv4.conf.all.rp_filter = 1
 net.ipv4.conf.default.rp_filter = 1
 EOF
 sysctl --system
 
-# Example: Enable firewall with default deny incoming and allow outgoing rules
+# Enable UFW with strict defaults
 ufw default deny incoming
 ufw default allow outgoing
 ufw --force enable
 
-# Run post-hardening OpenSCAP scan to verify the system state after remediation
-echo "[INFO] Running post-hardening OpenSCAP scan..."
-oscap xccdf eval --profile "$OSCAP_PROFILE" --results post_hardening_results.xml "$OSCAP_CONTENT"
+# -------------------------------
+# File Permission Lockdown
+# -------------------------------
 
-echo "[INFO] Hardening complete. Reports saved as pre_hardening_results.xml and post_hardening_results.xml"
+echo "[INFO] Hardening file permissions..."
+
+# Set default umask to 027 (secure default)
+echo "umask 027" >> /etc/profile
+echo "umask 027" >> /etc/bash.bashrc
+
+# Lock down /etc/shadow and /etc/gshadow
+chmod 000 /etc/shadow /etc/gshadow
+chown root:shadow /etc/shadow /etc/gshadow
+
+# Remove world-writable permissions from all files (except /tmp, /var/tmp)
+find / -xdev -type f -perm -0002 ! -path "/tmp/" ! -path "/var/tmp/" -exec chmod o-w {} \;
+
+# Restrict user home directories to user-only access
+for dir in /home/*; do
+  if [ -d "$dir" ]; then
+    chmod 700 "$dir"
+  fi
+done
+
+# -------------------------------
+# Final OpenSCAP Scan
+# -------------------------------
+
+echo "[INFO] Running post-hardening OpenSCAP scan..."
+oscap xccdf eval \
+  --profile "$OSCAP_PROFILE" \
+  --results "$REPORT_DIR/post_hardening_results.xml" \
+  "$OSCAP_CONTENT"
+
+echo "[INFO] Hardening complete."
+echo "[INFO] Reports saved in: $REPORT_DIR"
