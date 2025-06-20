@@ -15,7 +15,7 @@ echo "[SETUP] Removing Azure agent..."
 bash "$SCRIPT_DIR/remove-azure-agent.sh"
 
 echo "[SETUP] Installing Boundary and Apache..."
-bash "$ROOT_DIR/Boundary/install_boundary.sh"
-bash "$ROOT_DIR/Boundary/setup_apache_proxy.sh"
+bash "$ROOT_DIR/boundary/install_boundary.sh"
+bash "$ROOT_DIR/boundary/setup_apache_proxy.sh"
 
 echo "[SETUP] All setup steps complete."
