@@ -22,6 +22,11 @@ jobs:
           packer init .
           packer validate .
           packer build -var-file=variables.auto.pkrvars.hcl .
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
       - name: Run OpenSCAP Hardening
         run: |
           cd packer
