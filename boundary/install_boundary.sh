@@ -1,28 +1,41 @@
 #!/usr/bin/env bash
-# Install HashiCorp Boundary (controller+worker)
+# Install HashiCorp Boundary (controller + worker)
 
-set -e
+set -euo pipefail
 
-# Install dependencies
+LOG="/var/log/install_boundary.log"
+exec > >(tee -a "$LOG") 2>&1
+
+echo "[INFO] Installing dependencies..."
 apt-get update
 apt-get install -y unzip wget
 
-# Download Boundary
 BOUNDARY_VERSION="0.15.2"
-wget https://releases.hashicorp.com/boundary/${BOUNDARY_VERSION}/boundary_${BOUNDARY_VERSION}_linux_amd64.zip
-unzip boundary_${BOUNDARY_VERSION}_linux_amd64.zip
-mv boundary /usr/local/bin/
+BOUNDARY_ZIP="boundary_${BOUNDARY_VERSION}_linux_amd64.zip"
+BOUNDARY_URL="https://releases.hashicorp.com/boundary/${BOUNDARY_VERSION}/${BOUNDARY_ZIP}"
 
-# Create Boundary user and directories
-useradd --system --home /etc/boundary --shell /bin/false boundary
+echo "[INFO] Downloading Boundary version $BOUNDARY_VERSION..."
+wget -q "$BOUNDARY_URL" -O "$BOUNDARY_ZIP"
+
+echo "[INFO] Extracting Boundary binary..."
+unzip -o "$BOUNDARY_ZIP"
+mv -f boundary /usr/local/bin/
+chmod 755 /usr/local/bin/boundary
+rm -f "$BOUNDARY_ZIP"
+
+echo "[INFO] Creating Boundary user and directories..."
+if ! id -u boundary >/dev/null 2>&1; then
+  useradd --system --home /etc/boundary --shell /bin/false boundary
+fi
+
 mkdir -p /etc/boundary /var/lib/boundary /var/log/boundary
-chown boundary:boundary /etc/boundary /var/lib/boundary /var/log/boundary
+chown -R boundary:boundary /etc/boundary /var/lib/boundary /var/log/boundary
 
-# Copy config (provide your own boundary.hcl)
-cp $(dirname "$0")/boundary.hcl /etc/boundary/boundary.hcl
+echo "[INFO] Copying Boundary configuration..."
+cp "$(dirname "$0")/boundary.hcl" /etc/boundary/boundary.hcl
 chown boundary:boundary /etc/boundary/boundary.hcl
 
-# Setup systemd service for Boundary (controller+worker)
+echo "[INFO] Creating systemd service for Boundary..."
 cat > /etc/systemd/system/boundary.service <<EOF
 [Unit]
 Description=HashiCorp Boundary
@@ -38,8 +51,9 @@ Restart=on-failure
 WantedBy=multi-user.target
 EOF
 
+echo "[INFO] Reloading systemd daemon and starting Boundary service..."
 systemctl daemon-reload
 systemctl enable boundary
 systemctl start boundary
 
-echo "Boundary installed and running."
+echo "[INFO] Boundary installation and service startup complete."
