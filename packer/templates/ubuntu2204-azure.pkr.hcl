@@ -35,6 +35,6 @@ build {
   sources = ["source.azure-arm.ubuntu2204"]
 
   provisioner "shell" {
-    script = "packer/setup.sh"
+    script = "../scripts/setup.sh"
   }
 }
