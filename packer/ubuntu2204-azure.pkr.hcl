@@ -25,11 +25,7 @@
   "provisioners": [
     {
       "type": "shell",
-      "script": "hardening.sh"
-    },
-    {
-      "type": "shell",
-      "script": "remove-azure-agent.sh"
+      "script": "setup.sh"
     }
   ]
 }
