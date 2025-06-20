@@ -5,14 +5,17 @@ set -euo pipefail
 LOG="/var/log/packer-setup.log"
 exec > >(tee -a "$LOG") 2>&1
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
 echo "[SETUP] Running hardening..."
-bash "$(dirname "$0")/hardening.sh"
+bash "$SCRIPT_DIR/hardening.sh"
 
 echo "[SETUP] Removing Azure agent..."
-bash "$(dirname "$0")/remove-azure-agent.sh"
+bash "$SCRIPT_DIR/remove-azure-agent.sh"
 
 echo "[SETUP] Installing Boundary and Apache..."
-bash "$(dirname "$0")/install_boundary.sh"
-bash "$(dirname "$0")/setup_apache_proxy.sh"
+bash "$ROOT_DIR/Boundary/install_boundary.sh"
+bash "$ROOT_DIR/Boundary/setup_apache_proxy.sh"
 
 echo "[SETUP] All setup steps complete."
