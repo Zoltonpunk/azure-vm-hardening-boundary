@@ -1,0 +1,74 @@
+name: Build and Secure Azure VM Image
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '**.sh'
+      - 'packer/**'
+      - 'boundary/**'
+      - 'netfilter/**'
+      - '.github/workflows/main.yml'
+  pull_request:
+
+jobs:
+  build-and-harden-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Packer
+        uses: hashicorp/setup-packer@v2
+
+      - name: Build Azure Image with Packer
+        working-directory: ./packer
+        run: |
+          packer init .
+          packer validate .
+          # Uncomment and configure this for real Azure builds
+          # packer build -var-file=variables.auto.pkrvars.hcl .
+
+      - name: Run Hardening Script
+        working-directory: ./packer
+        run: |
+          chmod +x hardening.sh
+          ./hardening.sh
+
+      - name: Remove Azure Agent
+        working-directory: ./packer
+        run: |
+          chmod +x remove-azure-agent.sh
+          ./remove-azure-agent.sh
+
+  setup-boundary-and-proxy:
+    needs: build-and-harden-image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Boundary (Simulated)
+        working-directory: ./boundary
+        run: |
+          chmod +x install_boundary.sh
+          ./install_boundary.sh || echo "Skip actual install on CI"
+
+      - name: Setup Apache Reverse Proxy (Simulated)
+        working-directory: ./boundary
+        run: |
+          chmod +x setup_apache_proxy.sh
+          ./setup_apache_proxy.sh || echo "Skip actual install on CI"
+
+  apply-netfilter-rules:
+    needs: setup-boundary-and-proxy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Apply Netfilter Rules (Simulated)
+        working-directory: ./netfilter
+        run: |
+          chmod +x apply_rules.sh
+          ./apply_rules.sh || echo "Skip actual rules on CI"
