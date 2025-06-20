@@ -19,10 +19,10 @@ See [../boundary/README.md](../boundary/README.md) for full instructions.
 ## Azure Credentials
 
 You must create and provide the following Azure credentials for image builds:
-- AZURE_SUBSCRIPTION_ID
-- AZURE_CLIENT_ID
-- AZURE_CLIENT_SECRET
-- AZURE_TENANT_ID
+- ARM_SUBSCRIPTION_ID
+- ARM_CLIENT_ID
+- ARM_CLIENT_SECRET
+- ARM_TENANT_ID
 
 Set these as [GitHub Actions Secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets) under your repository.
 
