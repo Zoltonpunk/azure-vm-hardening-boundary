@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Install HashiCorp Boundary (controller + worker)
+# Install HashiCorp Boundary (controller + worker) and iptables-persistent for firewall rules persistence
 
 set -euo pipefail
 
 LOG="/var/log/install_boundary.log"
 exec > >(tee -a "$LOG") 2>&1
 
-echo "[INFO] Installing dependencies..."
+echo "[INFO] Installing dependencies: unzip, wget, and iptables-persistent..."
 apt-get update
-apt-get install -y unzip wget
+apt-get install -y unzip wget iptables-persistent
 
 BOUNDARY_VERSION="0.15.2"
 BOUNDARY_ZIP="boundary_${BOUNDARY_VERSION}_linux_amd64.zip"
@@ -56,4 +56,11 @@ systemctl daemon-reload
 systemctl enable boundary
 systemctl start boundary
 
-echo "[INFO] Boundary installation and service startup complete."
+echo "[INFO] Saving current iptables rules for persistence..."
+mkdir -p /etc/iptables
+iptables-save > /etc/iptables/rules.v4
+
+echo "[INFO] Restarting netfilter-persistent service to apply saved rules..."
+systemctl restart netfilter-persistent.service || true
+
+echo "[INFO] Boundary installation and firewall persistence setup complete."
