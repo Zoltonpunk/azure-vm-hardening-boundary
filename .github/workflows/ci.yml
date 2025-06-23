@@ -1,3 +1,5 @@
+# .github/workflows/ci.yml
+
 name: Build and Test Hardened Azure Image
 
 on:
@@ -6,6 +8,7 @@ on:
       - 'packer/**'
       - 'boundary/**'
       - 'netfilter/**'
+      - 'scripts/**'
       - '.github/workflows/ci.yml'
   pull_request:
 
@@ -14,22 +17,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Packer
         uses: hashicorp/setup-packer@v2
+
+      - name: Validate Packer Templates
+        run: |
+          cd packer/templates
+          packer init .
+          packer validate -var-file=../../variables.pkrvars.hcl ubuntu2204-azure.pkr.hcl
+
       - name: Build Azure Image
         run: |
-          cd packer
-          packer init .
-          packer validate .
-          packer build -var-file=variables.auto.pkrvars.hcl .
+          cd packer/templates
+          packer build -var-file=../../variables.pkrvars.hcl ubuntu2204-azure.pkr.hcl
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-      - name: Run OpenSCAP Hardening
+
+      - name: Run OpenSCAP Hardening Script
         run: |
-          cd packer
+          cd packer/scripts
           bash hardening.sh
 
   boundary-setup-test:
@@ -37,11 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Lint Boundary Config
+
+      - name: Shell Script Linting
         run: |
-          cd boundary
-          # Add a linter or validation script for boundary.hcl here
-      - name: Test Apache Reverse Proxy Script
-        run: |
-          cd boundary
-          # Add a test script for the Apache reverse proxy here
+          find . -name "*.sh" -exec bash -n {} \;
