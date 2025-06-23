@@ -1,0 +1,30 @@
+# Ignore sensitive files and temporary artifacts
+
+# Packer variable files
+*.pkrvars.hcl
+
+# OpenSCAP reports
+openscap-reports/
+*.html
+
+# SSL certificates
+*.key
+*.crt
+/etc/apache2/ssl/
+
+# System-specific
+*.log
+*.tmp
+*.bak
+
+# Secrets
+secrets.env
+.env
+
+# OS-generated
+.DS_Store
+Thumbs.db
+
+# Terraform and cloud state
+.tfstate
+.terraform/
