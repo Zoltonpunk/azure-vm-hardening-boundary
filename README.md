@@ -1,25 +1,110 @@
-# Azure VM Hardening and Boundary Access Service
+Azure VM Hardening & Boundary Access Setup
 
-This repository contains code, configuration, and automation for:
-- Building a hardened Ubuntu 22.04 Azure VM image with Packer
-- Setting up a remote access service with Boundary and an Apache reverse proxy
+This repository implements a secure remote access solution using HashiCorp Boundary, Apache reverse proxy, TLS, and Packer-hardened Ubuntu 22.04 images.
 
-## Structure
 
-- `/packer/` — Packer templates, hardening scripts, and documentation
-- `/boundary/` — Boundary configuration, startup scripts, and Apache reverse proxy setup
-- `/netfilter/` — Netfilter (iptables/nftables) rules and scripts
-- `.github/workflows/` — CI/CD automation using GitHub Actions
-- `/docs/` — Reports, before/after hardening results, and explanations
+---
 
-## Workflow
+📁 Directory Structure
 
-1. Edit and maintain Packer build scripts and hardening logic in `/packer/`
-2. Use GitHub Actions to automate image building and validation
-3. Store custom Boundary and Apache setup scripts in `/boundary/`
-4. Document security decisions and exceptions in `/docs/`
-5. Use `/netfilter/` for restrictive firewall rule automation
+packer/               # Packer image builder and hardening scripts
+boundary/             # Boundary configuration and setup
+reverse-proxy/        # Apache reverse proxy and TLS cert setup
+netfilter/            # Iptables (netfilter) firewall rules
+openscap-reports/     # OpenSCAP hardening reports (before/after)
+scripts/              # Utility scripts for TLS and Boundary setup
+docs/                 # Quickstart and documentation
 
-## Getting Started
 
-See [docs/quickstart.md](docs/quickstart.md) for instructions.
+---
+
+✅ Steps to Reproduce
+
+1. Build and Harden Ubuntu Image with Packer
+
+cd packer/
+# Customize variables in ubuntu2204-azure.pkr.hcl if needed
+packer init templates/
+packer build -var-file="variables.pkrvars.hcl" templates/
+
+2. Deploy the Image in Azure
+
+Deploy the image manually or via Terraform/CLI. SSH into the VM.
+
+3. Apply OpenSCAP Hardening (CIS Level 1)
+
+sudo bash packer/scripts/hardening.sh
+
+Place the reports in openscap-reports/.
+
+4. Remove Azure Agent
+
+sudo bash packer/scripts/remove-azure-agent.sh
+
+Note: This disables Azure-specific telemetry and VM extensions.
+
+
+---
+
+🔐 Secure Boundary + Apache Reverse Proxy
+
+5. Generate TLS Certificates
+
+sudo bash scripts/generate_cert.sh
+
+6. Start Dummy HTTPS Apache Service
+
+sudo bash scripts/start_dummy_https.sh
+
+Apache will serve a test page on https://localhost:443.
+
+7. Install & Configure Boundary
+
+sudo bash boundary/install_boundary.sh
+sudo boundary dev -config boundary.hcl
+
+8. Create Boundary User
+
+bash scripts/setup_boundary_user.sh
+
+9. Create Boundary Target
+
+bash scripts/setup_boundary_target.sh
+
+
+---
+
+🧱 Apply Netfilter Rules
+
+sudo bash netfilter/apply_rules.sh
+
+This script applies strict iptables rules allowing only necessary traffic.
+
+
+---
+
+🧪 Test Access Flow
+
+Authenticate via Boundary using CLI with demo:demo123
+
+Connect to the dummy HTTPS service via target
+
+
+
+---
+
+📎 Notes
+
+Reports are located in openscap-reports/
+
+TLS certificates are stored in /etc/apache2/ssl/
+
+For production, replace dummy certs with real CA-signed ones
+
+
+
+---
+
+📄 License
+
+MIT License
