@@ -25,4 +25,7 @@ if [ -d /var/lib/waagent ]; then
   rm -rf /var/lib/waagent
 fi
 
+echo "[INFO] Regenerating initramfs to reflect changes..."
+update-initramfs -u
+
 echo "[INFO] Azure Linux Agent removal complete."
