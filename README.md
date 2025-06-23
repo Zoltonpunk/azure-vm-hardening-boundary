@@ -7,12 +7,10 @@ This repository implements a secure remote access solution using HashiCorp Bound
 
 📁 Directory Structure
 
-packer/               # Packer image builder and hardening scripts
-boundary/             # Boundary configuration and setup
-reverse-proxy/        # Apache reverse proxy and TLS cert setup
+packer/               # Packer image builder,setup,agent removal and hardening scripts, dummy HTTPS, TLS certificate generation
+boundary/             # Boundary configuration and setup, Apache reverse proxy
 netfilter/            # Iptables (netfilter) firewall rules
 openscap-reports/     # OpenSCAP hardening reports (before/after)
-scripts/              # Utility scripts for TLS and Boundary setup
 docs/                 # Quickstart and documentation
 
 
