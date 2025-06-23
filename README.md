@@ -23,8 +23,11 @@ docs/                 # Quickstart and documentation
 1. Build and Harden Ubuntu Image with Packer
 
 cd packer/
-# Customize variables in ubuntu2204-azure.pkr.hcl if needed
+
+Customize variables in ubuntu2204-azure.pkr.hcl if needed
+
 packer init templates/
+
 packer build -var-file="variables.pkrvars.hcl" templates/
 
 2. Deploy the Image in Azure
@@ -61,6 +64,7 @@ Apache will serve a test page on https://localhost:443.
 7. Install & Configure Boundary
 
 sudo bash boundary/install_boundary.sh
+
 sudo boundary dev -config boundary.hcl
 
 8. Create Boundary User
