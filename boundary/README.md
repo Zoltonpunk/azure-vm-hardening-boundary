@@ -7,8 +7,10 @@ This directory contains scripts and configuration for:
 
 ## Setup Steps
 
-1. Run `install_boundary.sh` to install Boundary and configure a single admin user.
+1. Run `install_boundary.sh` to install HashiCorp Boundary (controller + worker) and iptables-persistent for firewall rules persistence
 2. Run `setup_apache_proxy.sh` to install Apache, generate self-signed TLS, and set up the reverse proxy.
-3. Use `netfilter/` scripts to apply firewall rules.
+3. `setup_boundary_target.sh` creates a TCP target in Boundary pointing to the local Apache HTTPS server
+4. `setup_boundary_user.sh` creates a password-based auth method and demo user in Boundary
+5. Use `netfilter/` scripts to apply firewall rules.
 
 See the details in each script for customization.
