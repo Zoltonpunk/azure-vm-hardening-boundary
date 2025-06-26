@@ -53,3 +53,15 @@ After removing the agent, the initramfs has been regenerated to ensure clean boo
 update-initramfs -u
 
 This ensures that removed agent components (e.g., device rules or services) are not referenced during the next boot cycle.
+
+📋 OpenSCAP Exceptions
+
+During the hardening process, the CIS Level 1 Workstation profile was applied. However, a few rules were intentionally skipped due to practical constraints:
+
+Rule ID	Reason for Exception	Risk Assessment
+
+xccdf_org.ssgproject.content_rule_no_usb_devices	USB support was kept for debug and manual file copy	Minimal if physical access is restricted
+disable_ctrlaltdel_burstaction	Left enabled for dev/test VM recovery	Low – only affects physical console
+
+
+📁 Full before/after reports can be found in openscap-reports/.

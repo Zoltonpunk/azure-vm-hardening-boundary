@@ -30,5 +30,5 @@ Set these as [GitHub Actions Secrets](https://docs.github.com/en/actions/securit
 
 ## Reviewing Results
 
-- Hardening reports: `packer/before_hardening.xml`, `packer/after_hardening.xml`
-- Customization docs: `docs/exceptions.md`
+- Hardening reports: `docs/pre_hardening_results.xml`, `docs/post_hardening_results.xml`
+- Customization docs: `docs/exceptions.md` *currently not present, can be added if required*
