@@ -23,14 +23,14 @@ jobs:
 
       - name: Validate Packer Templates
         run: |
-          cd packer/templates
-          packer init .
-          packer validate -var-file=../../variables.pkrvars.hcl ubuntu2204-azure.pkr.hcl
+          cd packer
+          packer init templates/
+          packer validate -var-file=../../variables.pkrvars.hcl templates/ubuntu2204-azure.pkr.hcl
 
       - name: Build Azure Image
         run: |
           cd packer/templates
-          packer build -var-file=../../variables.pkrvars.hcl ubuntu2204-azure.pkr.hcl
+          packer build -var-file=../../variables.pkrvars.hcl templates/ubuntu2204-azure.pkr.hcl
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
